@@ -2,21 +2,29 @@ package kim;
 
 import catserver.api.bukkit.event.ForgeEvent;
 import com.pixelmonmod.pixelmon.Pixelmon;
+import com.pixelmonmod.pixelmon.api.events.DropEvent;
 import com.pixelmonmod.pixelmon.api.events.PixelmonSendOutEvent;
+import com.pixelmonmod.pixelmon.api.events.battles.BattleEndEvent;
 import com.pixelmonmod.pixelmon.api.events.storage.ChangeStorageEvent;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.api.storage.PCStorage;
 import com.pixelmonmod.pixelmon.api.storage.StoragePosition;
+import com.pixelmonmod.pixelmon.enums.EnumSpecies;
 import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class pokemon extends JavaPlugin implements Listener {
     @Override
@@ -26,6 +34,7 @@ public class pokemon extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
@@ -41,20 +50,24 @@ public class pokemon extends JavaPlugin implements Listener {
         if (e.getForgeEvent() instanceof ChangeStorageEvent) {
             ChangeStorageEvent event = (ChangeStorageEvent)e.getForgeEvent();
             Player player = Bukkit.getPlayer(event.pokemon.getOwnerPlayerUUID());
-            PlayerPartyStorage pps = Pixelmon.storageManager.getParty(player.getUniqueId());
-            //box代表容器 -1 指玩家背包 0 - 256 指PC
-            System.out.println(event.pokemon.getLocalizedName()+" "+event.newPosition.box+" "+event.newPosition.order);
-            onPlayerPartyCheck(player);
+            Bukkit.getScheduler().runTaskLater(this,()->{
+                onPlayerPartyCheck(player);
+            },1);
+        }
+    }
 
-//            if (event.pokemon.getLocalizedName().equals("百变怪")){
-//                StoragePosition storagePosition = new StoragePosition(event.newPosition.box,event.newPosition.order);
-//                if (event.newPosition.box>=0){
-//                    PCStorage pcStorage = new PCStorage(pps.uuid);
-//                    pcStorage.set(storagePosition,null);
-//                }else {
-//                    pps.set(storagePosition,null);
-//                }
-//            }
+    @EventHandler
+    public void onBattleGetSpoil(ForgeEvent e){   //处理掉落物
+        if(e.getForgeEvent() instanceof DropEvent){
+            DropEvent event = (DropEvent) e.getForgeEvent();
+            event.getDrops().stream().collect(Collectors.toList()).forEach(item->{
+                ItemStack is = CraftItemStack.asBukkitCopy(item.itemStack);
+                Material material = is.getType();
+                String materialName = material.name();
+                if(materialName.equals(Material.GLOWSTONE_DUST.name())){ //萤石粉
+                    event.removeDrop(item);
+                }
+            });
         }
     }
 
@@ -72,23 +85,22 @@ public class pokemon extends JavaPlugin implements Listener {
 
     public void onPlayerPartyCheck(Player player){
         PlayerPartyStorage pps = Pixelmon.storageManager.getParty(player.getUniqueId());
-        for (Pokemon p:pps.getAll()) {
+        for (Pokemon p:pps.getTeam().stream().collect(Collectors.toList())) {
             if (p!=null){
-                if (p.getLocalizedName().equals("百变怪")){
+                if (p.getSpecies().getLocalizedName().equals("百变怪")){
                     pps.set(p.getPosition(),null);
                 }
             }
         }
     }
     public void onPlayerPCCheck(Player player){
-//        PCStorage pcStorage = new PCStorage(player.getUniqueId());
-//        for (Pokemon p:pcStorage.getAll()) {
-//            if (p!=null){
-//                if (p.getLocalizedName().equals("百变怪")){
-//                    System.out.println(p.getLocalizedName());
-//                    pcStorage.set(p.getPosition(),null);
-//                }
-//            }
-//        }
+        PCStorage pcStorage = Pixelmon.storageManager.getPCForPlayer(player.getUniqueId());
+        for (Pokemon p:pcStorage.getAll()) {
+            if (p!=null){
+                if (p.getLocalizedName().equals("百变怪")){
+                    pcStorage.set(p.getPosition(),null);
+                }
+            }
+        }
     }
 }

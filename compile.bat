@@ -1,0 +1,1 @@
+mvn clean package && copy .\target\BanPokemon-1.0-SNAPSHOT.jar F:\MinecraftServer\CatServer\plugins /y
