@@ -13,6 +13,9 @@ import com.pixelmonmod.pixelmon.enums.EnumSpecies;
 import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -26,22 +29,61 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class pokemon extends JavaPlugin implements Listener {
-    @Override
-    public void onLoad() {
-        super.onLoad();
-    }
+public class BanPokemon extends JavaPlugin implements Listener {
+
+    private static BanPokemon instance= null;
+    private SqlAPI sqlapi = new SqlAPI();
 
     @Override
     public void onEnable() {
-
+        instance = this;
+        sqlapi.initialize();
+        Bukkit.getScheduler().runTaskLater(this,()->sqlapi.refreshBan(),20*5);
         Bukkit.getPluginManager().registerEvents(this, this);
+        getCommand("banpokemon").setExecutor(new CommandExecutor() {
+            @Override
+            public boolean onCommand(CommandSender commandSender, Command command, String aliase, String[] args) {
+                if(args.length==0){
+                    sqlapi.test();
+                }
+                if(args.length==2){
+                    if(args[0].equals("add")){
+                        sqlapi.addPokemons(args[1]);
+                        commandSender.sendMessage("封禁了宝可梦 "+args[1]);
+                    }
+                    if(args[0].equals("remove")){
+                        sqlapi.removePokemons(args[1]);
+                        commandSender.sendMessage("解封了宝可梦 "+args[1]);
+                    }
+                }
+                return true;
+            }
+        });
+        getCommand("bandrop").setExecutor(new CommandExecutor() {
+            @Override
+            public boolean onCommand(CommandSender commandSender, Command command, String aliase, String[] args) {
+                if(args.length==0){
+                    sqlapi.test();
+                }
+                if(args.length==2){
+                    if(args[0].equals("add")){
+                        sqlapi.addDrops(args[1]);
+                        commandSender.sendMessage("封禁了宝可梦掉落物 "+args[1]);
+                    }
+                    if(args[0].equals("remove")){
+                        sqlapi.removeDrops(args[1]);
+                        commandSender.sendMessage("解封了宝可梦掉落物 "+args[1]);
+                    }
+                }
+                return true;
+            }
+        });
     }
 
 
     @Override
     public void onDisable() {
-        super.onDisable();
+        sqlapi.close();
     }
 
     @EventHandler
@@ -63,8 +105,8 @@ public class pokemon extends JavaPlugin implements Listener {
             event.getDrops().stream().collect(Collectors.toList()).forEach(item->{
                 ItemStack is = CraftItemStack.asBukkitCopy(item.itemStack);
                 Material material = is.getType();
-                String materialName = material.name();
-                if(materialName.equals(Material.GLOWSTONE_DUST.name())){ //萤石粉
+                String materialName = material.name().toUpperCase();
+                if(sqlapi.getBanDrops().contains(materialName)){
                     event.removeDrop(item);
                 }
             });
@@ -87,7 +129,7 @@ public class pokemon extends JavaPlugin implements Listener {
         PlayerPartyStorage pps = Pixelmon.storageManager.getParty(player.getUniqueId());
         for (Pokemon p:pps.getTeam().stream().collect(Collectors.toList())) {
             if (p!=null){
-                if (p.getSpecies().getLocalizedName().equals("百变怪")){
+                if (sqlapi.getBanPokemons().contains(p.getLocalizedName())){
                     pps.set(p.getPosition(),null);
                 }
             }
@@ -97,10 +139,14 @@ public class pokemon extends JavaPlugin implements Listener {
         PCStorage pcStorage = Pixelmon.storageManager.getPCForPlayer(player.getUniqueId());
         for (Pokemon p:pcStorage.getAll()) {
             if (p!=null){
-                if (p.getLocalizedName().equals("百变怪")){
+                if (sqlapi.getBanPokemons().contains(p.getLocalizedName())){
                     pcStorage.set(p.getPosition(),null);
                 }
             }
         }
+    }
+
+    public static BanPokemon getInstance(){
+        return instance;
     }
 }
