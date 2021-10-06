@@ -5,28 +5,35 @@ import com.pixelmonmod.pixelmon.Pixelmon;
 import com.pixelmonmod.pixelmon.api.events.DropEvent;
 import com.pixelmonmod.pixelmon.api.events.PixelmonSendOutEvent;
 import com.pixelmonmod.pixelmon.api.events.battles.BattleEndEvent;
+import com.pixelmonmod.pixelmon.api.events.spawning.SpawnEvent;
 import com.pixelmonmod.pixelmon.api.events.storage.ChangeStorageEvent;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.api.storage.PCStorage;
 import com.pixelmonmod.pixelmon.api.storage.StoragePosition;
+import com.pixelmonmod.pixelmon.entities.EntityDen;
+import com.pixelmonmod.pixelmon.entities.npcs.registry.RaidSpawningRegistry;
 import com.pixelmonmod.pixelmon.enums.EnumSpecies;
+import com.pixelmonmod.pixelmon.enums.forms.IEnumForm;
 import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
+import net.minecraft.util.Tuple;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_12_R1.inventory.CraftItemStack;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Arrays;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BanPokemon extends JavaPlugin implements Listener {
@@ -78,6 +85,19 @@ public class BanPokemon extends JavaPlugin implements Listener {
                 return true;
             }
         });
+
+            RaidSpawningRegistry.map.values().forEach(map->{
+                map.values().forEach(list->{
+                    Iterator<Tuple<EnumSpecies, Optional<IEnumForm>>> iter = list.iterator();
+                    while(iter.hasNext()){
+                        Tuple<EnumSpecies, Optional<IEnumForm>> tuple = iter.next();
+                        EnumSpecies species = tuple.func_76341_a();
+                        if(Arrays.asList(raidBlacklist).contains(species.name())){
+                            iter.remove();
+                        }
+                    }
+                });
+            });
     }
 
 
@@ -125,6 +145,18 @@ public class BanPokemon extends JavaPlugin implements Listener {
         onPlayerPCCheck(event.getPlayer());
     }
 
+//    @EventHandler
+//    public void onPokemonHuge(PlayerInteractEntityEvent e){
+//        Entity entity = e.getRightClicked();
+//        CraftEntity ce = (CraftEntity) entity;
+//        net.minecraft.entity.Entity nmsEntity = ce.getHandle();
+//        if(entity.getType().name().equalsIgnoreCase("PIXELMON_DEN")){
+//            EntityDen den = (EntityDen)nmsEntity;
+//            den.get
+//        }
+//    }
+
+
     public void onPlayerPartyCheck(Player player){
         PlayerPartyStorage pps = Pixelmon.storageManager.getParty(player.getUniqueId());
         for (Pokemon p:pps.getTeam().stream().collect(Collectors.toList())) {
@@ -149,4 +181,34 @@ public class BanPokemon extends JavaPlugin implements Listener {
     public static BanPokemon getInstance(){
         return instance;
     }
+
+    String[] raidBlacklist={
+            "MissingNo",
+            "Ditto",
+            "Bulbasaur",
+            "Squirtle",
+            "Charmander",
+            "Chikorita",
+            "Totodile",
+            "Cyndaquil",
+            "Treecko",
+            "Mudkip",
+            "Torchic",
+            "Turtwig",
+            "Piplup",
+            "Chimchar",
+            "Snivy",
+            "Oshawott",
+            "Tepig",
+            "Chespin",
+            "Froakie",
+            "Fennekin",
+            "Rowlet",
+            "Popplio",
+            "Litten",
+            "Grookey",
+            "Sobble",
+            "Scorbunny"
+    };
+
 }
