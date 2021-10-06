@@ -1,0 +1,9 @@
+name: BanPokemon
+version: 1.0-SNAPSHOT
+main: kim.BanPokemon
+authors: [Red_Carl,asougi85]
+commands:
+  banpokemon:
+    description: banpokemon
+  bandrop:
+    description: bandrop

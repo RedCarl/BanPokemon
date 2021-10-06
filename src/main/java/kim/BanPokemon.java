@@ -72,6 +72,19 @@ public class BanPokemon extends JavaPlugin implements Listener {
                 if(args.length==0){
                     sqlapi.test();
                 }
+                if(args.length==1){
+                    if(commandSender instanceof Player){
+                        if(args[0].equals("add")){
+                            sqlapi.addDrops(((Player) commandSender).getInventory().getItemInMainHand().getType().name());
+                            commandSender.sendMessage("封禁了宝可梦掉落物 "+((Player) commandSender).getInventory().getItemInMainHand().getType().name());
+                        }
+                        if(args[0].equals("remove")){
+                            sqlapi.removeDrops(((Player) commandSender).getInventory().getItemInMainHand().getType().name());
+                            commandSender.sendMessage("解封了宝可梦掉落物 "+((Player) commandSender).getInventory().getItemInMainHand().getType().name());
+                        }
+                    }
+                }
+
                 if(args.length==2){
                     if(args[0].equals("add")){
                         sqlapi.addDrops(args[1]);
@@ -186,29 +199,77 @@ public class BanPokemon extends JavaPlugin implements Listener {
             "MissingNo",
             "Ditto",
             "Bulbasaur",
-            "Squirtle",
+            "Ivysaur",
+            "Venusaur",
             "Charmander",
+            "Charmeleon",
+            "Charizard",
+            "Squirtle",
+            "Wartortle",
+            "Blastoise",
             "Chikorita",
-            "Totodile",
+            "Bayleef",
+            "Meganium",
             "Cyndaquil",
+            "Quilava",
+            "Typhlosion",
+            "Totodile",
+            "Croconaw",
+            "Feraligat",
             "Treecko",
-            "Mudkip",
+            "Grovyle",
+            "Sceptile",
             "Torchic",
+            "Combusken",
+            "Blaziken",
+            "Mudkip",
+            "Marshtomp",
+            "Swampert",
             "Turtwig",
-            "Piplup",
+            "Grotle",
+            "Torterra",
             "Chimchar",
+            "Monferno",
+            "Infernape",
+            "Piplup",
+            "Prinplup",
+            "Empoleon",
             "Snivy",
-            "Oshawott",
+            "Servine",
+            "Serperior",
             "Tepig",
+            "Pignite",
+            "Emboar",
+            "Oshawott",
+            "Dewott",
+            "Samurott",
             "Chespin",
-            "Froakie",
+            "Quilladin",
+            "Chesnaught",
             "Fennekin",
+            "Braixen",
+            "Delphox",
+            "Froakie",
+            "Frogadier",
+            "Greninja",
             "Rowlet",
-            "Popplio",
+            "Dartrix",
+            "Decidueye",
             "Litten",
+            "Torracat",
+            "Incineroar",
+            "Popplio",
+            "Brionne",
+            "Primarina",
             "Grookey",
+            "Thwackey",
+            "Rillaboom",
+            "Scorbunny",
+            "Raboot",
+            "Cinderace",
             "Sobble",
-            "Scorbunny"
+            "Drizzile",
+            "Inteleon",
     };
 
 }
